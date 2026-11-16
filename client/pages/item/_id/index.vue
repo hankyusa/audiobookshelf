@@ -130,6 +130,8 @@
 
           <tables-chapters-table v-if="chapters.length" :library-item="libraryItem" class="mt-6" />
 
+          <tables-bookmarks-table v-if="bookmarks.length" :bookmarks="bookmarks" class="mt-6" @select="selectBookmark" />
+
           <tables-tracks-table v-if="tracks.length" :title="$strings.LabelStatsAudioTracks" :tracks="tracksWithAudioFile" :is-file="isFile" :library-item-id="libraryItemId" class="mt-6" />
 
           <tables-podcast-lazy-episodes-table ref="episodesTable" v-if="isPodcast" :library-item="libraryItem" />
@@ -142,7 +144,6 @@
     </div>
 
     <modals-podcast-episode-feed v-model="showPodcastEpisodeFeed" :library-item="libraryItem" :episodes="podcastFeedEpisodes" :download-queue="episodeDownloadsQueued" :episodes-downloading="episodesDownloading" />
-    <modals-bookmarks-modal v-model="showBookmarksModal" :bookmarks="bookmarks" :playback-rate="1" :library-item-id="libraryItemId" hide-create @select="selectBookmark" />
   </div>
 </template>
 
@@ -180,7 +181,6 @@ export default {
       podcastFeedEpisodes: [],
       episodesDownloading: [],
       episodeDownloadsQueued: [],
-      showBookmarksModal: false,
       isDescriptionClamped: false,
       showFullDescription: false
     }
@@ -382,13 +382,6 @@ export default {
         })
       }
 
-      if (this.bookmarks.length) {
-        items.push({
-          text: this.$strings.LabelYourBookmarks,
-          action: 'bookmarks'
-        })
-      }
-
       if (this.showRssFeedBtn) {
         items.push({
           text: this.$strings.LabelOpenRSSFeed,
@@ -439,7 +432,6 @@ export default {
       if (this.isStreaming) {
         this.$eventBus.$emit('playback-seek', bookmark.time)
       } else if (this.streamLibraryItem) {
-        this.showBookmarksModal = false
         console.log('Already streaming library item so ask about it')
         const payload = {
           message: `Start playback for "${this.title}" at ${this.$secondsToTimestamp(bookmark.time)}?`,
@@ -454,7 +446,6 @@ export default {
       } else {
         this.playItem(bookmark.time)
       }
-      this.showBookmarksModal = false
     },
     clearDownloadQueue() {
       if (confirm('Are you sure you want to clear episode download queue?')) {
@@ -763,8 +754,6 @@ export default {
       } else if (action === 'playlists') {
         this.$store.commit('globals/setSelectedPlaylistItems', [{ libraryItem: this.libraryItem }])
         this.$store.commit('globals/setShowPlaylistsModal', true)
-      } else if (action === 'bookmarks') {
-        this.showBookmarksModal = true
       } else if (action === 'rss-feeds') {
         this.clickRSSFeed()
       } else if (action === 'download') {
